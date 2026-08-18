@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PyTorch 张量操作 · 幻灯片</title>
+
+    <!-- highlight.js CDN (代码高亮) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai-sublime.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js">
+    </script>
+
+    <!-- 外部样式表 -->
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+    <div class="presentation" id="app">
+        <div class="slides-wrapper" id="slidesWrapper">
+
+            <!-- ===== SLIDE 0: 封面 ===== -->
+            <div class="slide slide-cover active" data-index="0">
+                <div class="slide-header">
+                    <span class="slide-number">✦</span>
+                    <span class="slide-title" style="-webkit-text-fill-color:transparent;">PyTorch 张量操作与自动微分</span>
+                </div>
+                <div class="slide-body">
+                    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.8rem;">
+                        <div style="font-size:4.4rem;font-weight:200;opacity:0.15;letter-spacing:12px;">⚡</div>
+                        <div class="slide-subtitle">课堂笔记 · 完整回顾</div>
+                        <div style="width:60px;height:2px;background:linear-gradient(90deg,transparent,#4a9eff,transparent);margin:0.4rem 0;"></div>
+                        <div style="color:rgba(255,255,255,0.3);font-size:0.95rem;letter-spacing:1px;">
+                            张量索引 · 形状操作 · 拼接 · 自动微分
+                        </div>
+                        <div class="cover-meta">
+                            <span>使用 ← → 或 点击按钮 导航</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== SLIDE 1: 目录 ===== -->
+            <div class="slide slide-toc" data-index="1">
+                <div class="slide-header">
+                    <span class="slide-number">01</span>
+                    <span class="slide-title">目录 <span class="sub">Contents</span></span>
+                </div>
+                <div class="slide-body">
+                    <div class="toc-grid">
+                        <div class="toc-item"><span class="toc-num">1</span><span class="toc-text">张量索引操作</span></div>
+                        <div class="toc-item"><span class="toc-num">2</span><span class="toc-text">张量形状操作</span></div>
+                        <div class="toc-item"><span class="toc-num">3</span><span class="toc-text">张量拼接操作</span></div>
+                        <div class="toc-item"><span class="toc-num">4</span><span class="toc-text">自动微分模块</span></div>
+                    </div>
+                    <div style="margin-top:0.8rem;display:flex;gap:0.8rem;flex-wrap:wrap;justify-content:center;">
+                        <span style="background:rgba(255,255,255,0.04);padding:0.2rem 1rem;border-radius:30px;font-size:0.75rem;color:rgba(255,255,255,0.25);">reshape · squeeze · transpose · view</span>
+                        <span style="background:rgba(255,255,255,0.04);padding:0.2rem 1rem;border-radius:30px;font-size:0.75rem;color:rgba(255,255,255,0.25);">cat · stack</span>
+                        <span style="background:rgba(255,255,255,0.04);padding:0.2rem 1rem;border-radius:30px;font-size:0.75rem;color:rgba(255,255,255,0.25);">gradient · backward · detach</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== SLIDE 2: 索引操作 - 基础 ===== -->
+            <div class="slide" data-index="2">
+                <div class="slide-header">
+                    <span class="slide-number">02</span>
+                    <span class="slide-title">张量索引操作 <span class="sub">基础索引</span></span>
+                </div>
+                <div class="slide-body">
+                    <p>下标从左到右从 <span class="text-accent">0</span> 开始，从右到左从 <span class="text-accent">-1</span> 开始。</p>
+                    <div class="highlight-box" style="margin:0.2rem 0 0.4rem;">
+                        <code style="color:#7ab7ff;">data[行下标, 列下标]</code> &nbsp;·&nbsp; <code style="color:#7ab7ff;">data[0轴, 1轴, 2轴]</code>
+                    </div>
+                    <div class="code-wrapper">
+                        <pre><code class="language-python">import torch
+                            torch.manual_seed(0)
+                            data = torch.randint(0, 10, (4, 5))
+                            print('data->', data)
+
+                            # 行数据：第一行
+                            print('data[0] ->', data[0])
+
+                            # 列数据：第一列
+                            print('data[:, 0] ->', data[:, 0])
+
+                            # 三维张量索引
+                            data2 = torch.randint(0, 10, (3, 4, 5))
+                            print('0轴第一个值 ->', data2[0, :, :])
+                            print('1轴第一个值 ->', data2[:, 0, :])
+                            print('2轴第一个值 ->', data2[:, :, 0])</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== SLIDE 3: 索引操作 - 高级 ===== -->
+            <div class="slide" data-index="3">
+                <div class="slide-header">
+                    <span class="slide-number">03</span>
+                    <span class="slide-title">张量索引操作 <span class="sub">高级索引 &amp; 切片</span></span>
+                </div>
+                <div class="slide-body">
+                    <div style="display:flex;flex-wrap:wrap;gap:0.3rem 0.8rem;margin-bottom:0.3rem;">
+                        <span class="tag">列表索引</span>
+                        <span class="tag">布尔索引</span>
+                        <span class="tag">切片</span>
+                    </div>
+                    <div class="code-wrapper">
+                        <pre><code class="language-python"># 列表索引：取 (第二行,第三列) 和 (第四行,第五列)
+                        print('data[[1,3], [2,4]] ->', data[[1, 3], [2, 4]])
+
+                        # 列表索引 (行列表 & 列列表)
+                        print('data[[[1],[3]], [2,4]] ->', data[[[1], [3]], [2, 4]])
+
+                        # 布尔索引：第二列大于6的所有行
+                        print(data[:, 1] > 6)
+                        print('data[data[:,1] > 6] ->', data[data[:, 1] > 6])
+
+                        # 布尔索引：第三行大于6的所有列
+                        print('data[:, data[2] > 6] ->', data[:, data[2] > 6])
+
+                        # 切片：第一行到第三行 (步长2) · 第二列到第四列 (步长2)
+                        print('data[::2, 1::2] ->', data[::2, 1::2])</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== SLIDE 4: reshape ===== -->
+            <div class="slide" data-index="4">
+                <div class="slide-header">
+                    <span class="slide-number">04</span>
+                    <span class="slide-title">形状操作 <span class="sub">reshape</span></span>
+                </div>
+                <div class="slide-body">
+                    <p><code style="color:#7ab7ff;">reshape(shape)</code> 修改连续或非连续张量的形状，不改变数据。</p>
+                    <div class="highlight-box" style="margin:0.2rem 0 0.3rem;">
+                        <code style="color:#f8f8f2;">-1</code> 表示自动计算维度大小
+                    </div>
+                    <div class="code-wrapper">
+                        <pre><code class="language-python">t1 = torch.randint(0, 10, (5, 6))
+                            print('t1形状 ->', t1.shape)   # (5, 6)
+
+                            # 修改为 (2, 15)
+                            t2 = t1.reshape((2, 15))
+                            print('t2形状 ->', t2.shape)   # (2, 15)
+
+                            # 使用 -1 自动计算
+                            t3 = t1.reshape((2, -1))
+                            print('t3形状 ->', t3.shape)   # (2, 15)
+
+                            # 三维示例
+                            t4 = torch.randint(0, 10, (2, 3, 4))
+                            t5 = t4.reshape((-1, 4))
+                            print('t5形状 ->', t5.shape)   # (6, 4)</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== SLIDE 5: squeeze / unsqueeze ===== -->
+            <div class="slide" data-index="5">
+                <div class="slide-header">
+                    <span class="slide-number">05</span>
+                    <span class="slide-title">形状操作 <span class="sub">squeeze / unsqueeze</span></span>
+                </div>
+                <div class="slide-body">
+                    <div style="display:flex;gap:1.2rem;flex-wrap:wrap;margin-bottom:0.2rem;">
+                        <div><span class="tag" style="background:rgba(74,158,255,0.12);">squeeze</span> 删除值为1的维度</div>
+                        <div><span class="tag" style="background:rgba(167,139,250,0.12);">unsqueeze</span> 增加值为1的维度</div>
+                    </div>
+                    <div class="code-wrapper">
+                        <pre><code class="language-python">t1 = torch.randint(0, 10, (3, 1, 2, 1))
+                            print('t1形状 ->', t1.shape)   # (3, 1, 2, 1)
+
+                            # squeeze：删除所有值为1的维度
+                            t2 = torch.squeeze(t1)
+                            print('t2形状 ->', t2.shape)   # (3, 2)
+
+                            # squeeze 指定维度 (维度值不为1不生效)
+                            t3 = torch.squeeze(t1, dim=1)
+                            print('t3形状 ->', t3.shape)   # (3, 2, 1)
+
+                            # unsqueeze：在指定维度增加维度
+                            t4 = t2.unsqueeze(dim=0)
+                            print('t4形状 ->', t4.shape)   # (1, 3, 2)
+
+                            t5 = t2.unsqueeze(dim=-1)
+                            print('t5形状 ->', t5.shape)   # (3, 2, 1)</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== SLIDE 6: transpose / permute ===== -->
+            <div class="slide" data-index="6">
+                <div class="slide-header">
+                    <span class="slide-number">06</span>
+                    <span class="slide-title">形状操作 <span class="sub">transpose / permute</span></span>
+                </div>
+                <div class="slide-body">
+                    <div style="display:flex;gap:1.2rem;flex-wrap:wrap;margin-bottom:0.2rem;">
+                        <div><span class="tag" style="background:rgba(74,158,255,0.12);">transpose</span> 交换两个维度</div>
+                        <div><span class="tag" style="background:rgba(167,139,250,0.12);">permute</span> 重排任意维度</div>
+                    </div>
+                    <div class="code-wrapper">
+                        <pre><code class="language-python">t1 = torch.randint(0, 10, (3, 4, 5))
+                            print('t1形状 ->', t1.shape)   # (3, 4, 5)
+
+                            # transpose：交换 0 和 1 维度
+                            t2 = t1.transpose(dim0=1, dim1=0)
+                            print('t2形状 ->', t2.shape)   # (4, 3, 5)
+
+                            # permute：重排为 (1, 0, 2)
+                            t3 = t1.permute(dims=(1, 0, 2))
+                            print('t3形状 ->', t3.shape)   # (4, 3, 5)
+
+                            # permute：重排为 (2, 0, 1)
+                            t4 = t1.permute(dims=(2, 0, 1))
+                            print('t4形状 ->', t4.shape)   # (5, 3, 4)</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== SLIDE 7: view / contiguous ===== -->
+            <div class="slide" data-index="7">
+                <div class="slide-header">
+                    <span class="slide-number">07</span>
+                    <span class="slide-title">形状操作 <span class="sub">view &amp; contiguous</span></span>
+                </div>
+                <div class="slide-body">
+                    <p><code style="color:#7ab7ff;">view()</code> 修改连续张量的形状，<span class="text-accent">reshape()</span> 是更安全的选择。</p>
+                    <div class="highlight-box" style="margin:0.2rem 0 0.3rem;">
+                        <code style="color:#f8f8f2;">is_contiguous()</code> 判断是否连续 &nbsp;·&nbsp; <code style="color:#f8f8f2;">contiguous()</code> 转为连续
+                    </div>
+                    <div class="code-wrapper">
+                        <pre><code class="language-python">t1 = torch.randint(0, 10, (3, 4))
+                            print('t1连续?', t1.is_contiguous())   # True
+
+                            # view 可用
+                            t2 = t1.view((4, 3))
+                            print('t2形状 ->', t2.shape)   # (4, 3)
+
+                            # transpose 后变为不连续
+                            t3 = t1.transpose(1, 0)
+                            print('t3连续?', t3.is_contiguous())   # False
+
+                            # view 在非连续张量上会报错
+                            # t3.view((3, 4))  # ❌
+
+                            # 方案1：先 contiguous() 再 view
+                            t4 = t3.contiguous().view((3, 4))
+
+                            # 方案2：直接使用 reshape (推荐)
+                            t5 = t3.reshape((3, 4))
+                            print('t5形状 ->', t5.shape)   # (3, 4)</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== SLIDE 8: cat / concat ===== -->
+            <div class="slide" data-index="8">
+                <div class="slide-header">
+                    <span class="slide-number">08</span>
+                    <span class="slide-title">拼接操作 <span class="sub">cat / concat</span></span>
+                </div>
+                <div class="slide-body">
+                    <p>在指定维度上拼接，其他维度必须相同，<span class="text-accent">维度值相加</span>，不改变维度数量。</p>
+                    <div class="code-wrapper">
+                        <pre><code class="language-python">t1 = torch.randint(0, 10, (2, 3))
+                            t2 = torch.randint(0, 10, (2, 3))
+
+                            # dim=0：行方向拼接 (2+2=4 行)
+                            t3 = torch.cat([t1, t2], dim=0)
+                            print('t3形状 ->', t3.shape)   # (4, 3)
+
+                            # dim=1：列方向拼接 (3+3=6 列)
+                            t4 = torch.concat([t1, t2], dim=1)
+                            print('t4形状 ->', t4.shape)   # (2, 6)
+
+                            # 三维示例
+                            t5 = torch.randint(0, 10, (2, 2, 3))
+                            t6 = torch.randint(0, 10, (2, 2, 3))
+                            t7 = torch.cat([t5, t6], dim=2)
+                            print('t7形状 ->', t7.shape)   # (2, 2, 6)</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== SLIDE 9: stack ===== -->
+            <div class="slide" data-index="9">
+                <div class="slide-header">
+                    <span class="slide-number">09</span>
+                    <span class="slide-title">拼接操作 <span class="sub">stack</span></span>
+                </div>
+                <div class="slide-body">
+                    <p>在指定维度上 <span class="text-accent">堆叠</span>，新增一个维度，维度值 = 张量个数。</p>
+                    <div class="highlight-box" style="margin:0.2rem 0 0.3rem;">
+                        <code style="color:#f8f8f2;">stack</code> 会 <strong>增加维度</strong>，<code style="color:#f8f8f2;">cat</code> 不会。
+                    </div>
+                    <div class="code-wrapper">
+                        <pre><code class="language-python">t1 = torch.randint(0, 10, (2, 3))
+                            t2 = torch.randint(0, 10, (2, 3))
+
+                            # dim=0：在第0维堆叠 → (2, 2, 3)
+                            t3 = torch.stack([t1, t2], dim=0)
+                            print('t3形状 ->', t3.shape)   # (2, 2, 3)
+
+                            # dim=1：在第1维堆叠 → (2, 2, 3)
+                            t4 = torch.stack([t1, t2], dim=1)
+                            print('t4形状 ->', t4.shape)   # (2, 2, 3)
+
+                            # dim=-1：在最后维度堆叠 → (2, 3, 2)
+                            t5 = torch.stack([t1, t2], dim=-1)
+                            print('t5形状 ->', t5.shape)   # (2, 3, 2)
+
+                            # 堆叠多个张量 (3个)
+                            t6 = torch.stack([t1, t2, t1], dim=0)
+                            print('t6形状 ->', t6.shape)   # (3, 2, 3)</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== SLIDE 10: 自动微分 - 梯度计算 ===== -->
+            <div class="slide" data-index="10">
+                <div class="slide-header">
+                    <span class="slide-number">10</span>
+                    <span class="slide-title">自动微分 <span class="sub">梯度计算</span></span>
+                </div>
+                <div class="slide-body">
+                    <p><code style="color:#7ab7ff;">requires_grad=True</code> 开启自动微分，<code style="color:#7ab7ff;">.backward()</code> 计算梯度。</p>
+                    <div class="highlight-box" style="margin:0.2rem 0 0.3rem;">
+                        ⚠️ 梯度默认 <strong>累加</strong>，每次反向传播前需 <code style="color:#f8f8f2;">zero_()</code> 清零。
+                    </div>
+                    <div class="code-wrapper">
+                        <pre><code class="language-python">w = torch.tensor([10, 20], requires_grad=True, dtype=torch.float32)
+                            loss = 2 * w ** 2
+
+                            # loss 必须是标量，用 sum() 聚合
+                            loss.sum().backward()
+
+                            # 查看梯度
+                            print('w.grad ->', w.grad)   # [40, 80]
+
+                            # 梯度更新 (梯度下降)
+                            lr = 0.01
+                            w.data = w.data - lr * w.grad
+
+                            # 梯度清零 (避免累加)
+                            if w.grad is not None:
+                            w.grad.zero_()</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== SLIDE 11: 梯度下降法 ===== -->
+            <div class="slide" data-index="11">
+                <div class="slide-header">
+                    <span class="slide-number">11</span>
+                    <span class="slide-title">自动微分 <span class="sub">梯度下降法求最优解</span></span>
+                </div>
+                <div class="slide-body">
+                    <p>通过迭代更新权重，使损失函数 <code style="color:#7ab7ff;">loss = w² + 20</code> 最小化。</p>
+                    <div class="code-wrapper small">
+                        <pre><code class="language-python">w = torch.tensor(10, requires_grad=True, dtype=torch.float32)
+                            lr = 0.01
+
+                            for i in range(1, 1001):
+                            # 前向传播：计算损失
+                            loss = w ** 2 + 20
+
+                            # 梯度清零
+                            if w.grad is not None:
+                            w.grad.zero_()
+
+                            # 反向传播：计算梯度
+                            loss.sum().backward()
+
+                            # 梯度更新：W = W - lr * grad
+                            w.data = w.data - lr * w.grad
+
+                            if i % 200 == 0:
+                            print(f'第{i:4d}次: w={w.item():.6f}, loss={loss.item():.6f}')
+
+                            # 最终 w → 0, loss → 20</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== SLIDE 12: 注意点 - detach ===== -->
+            <div class="slide" data-index="12">
+                <div class="slide-header">
+                    <span class="slide-number">12</span>
+                    <span class="slide-title">自动微分 <span class="sub">注意点 · detach</span></span>
+                </div>
+                <div class="slide-body">
+                    <p>自动微分的张量 <strong>不能</strong> 直接转换为 NumPy 数组，需用 <code style="color:#7ab7ff;">.detach()</code> 剥离。</p>
+                    <div class="code-wrapper">
+                        <pre><code class="language-python">x1 = torch.tensor(10, requires_grad=True, dtype=torch.float32)
+                            print('x1.requires_grad ->', x1.requires_grad)   # True
+
+                            # detach()：生成新的张量，不自动微分，数据共享
+                            x2 = x1.detach()
+                            print('x2.requires_grad ->', x2.requires_grad)   # False
+
+                            # 数据地址相同 (共享存储)
+                            print(id(x1.data) == id(x2.data))   # True
+
+                            # 转换为 NumPy 数组 (需先 detach)
+                            n1 = x2.numpy()
+                            print('n1 ->', n1)   # 10.0
+
+                            # ❌ 直接转换会报错
+                            # n2 = x1.numpy()  # RuntimeError</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== SLIDE 13: 应用 - MSE损失 ===== -->
+            <div class="slide" data-index="13">
+                <div class="slide-header">
+                    <span class="slide-number">13</span>
+                    <span class="slide-title">自动微分 <span class="sub">应用 · MSE 损失</span></span>
+                </div>
+                <div class="slide-body">
+                    <p>使用 <code style="color:#7ab7ff;">torch.nn.MSELoss</code> 计算均方误差损失，并自动计算梯度。</p>
+                    <div class="code-wrapper small">
+                        <pre><code class="language-python">import torch.nn as nn
+
+                            # 1. 定义样本 x 和 y
+                            x = torch.ones((2, 5))
+                            y = torch.zeros((2, 3))
+
+                            # 2. 模型权重 (自动微分)
+                            w = torch.randn((5, 3), requires_grad=True)
+                            b = torch.randn((3,), requires_grad=True)
+
+                            # 3. 前向传播：计算预测值
+                            y_pred = torch.matmul(x, w) + b
+
+                            # 4. MSE 损失
+                            criterion = nn.MSELoss()
+                            loss = criterion(y_pred, y)
+
+                            # 5. 反向传播：计算梯度
+                            loss.sum().backward()
+
+                            print('w.grad 形状 ->', w.grad.shape)   # (5, 3)
+                            print('b.grad ->', b.grad)             # (3,)</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== SLIDE 14: 总结 ===== -->
+            <div class="slide" data-index="14">
+                <div class="slide-header">
+                    <span class="slide-number">14</span>
+                    <span class="slide-title">总结 <span class="sub">核心要点</span></span>
+                </div>
+                <div class="slide-body" style="justify-content:center;gap:0.6rem;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem 1.6rem;width:100%;max-width:720px;margin:0 auto;">
+                        <div style="background:rgba(255,255,255,0.03);border-radius:12px;padding:0.8rem 1rem;border-left:3px solid #4a9eff;">
+                            <div style="font-size:0.7rem;color:rgba(255,255,255,0.3);letter-spacing:1px;">索引</div>
+                            <div style="font-size:0.95rem;color:#e8e8e8;">基础 · 列表 · 布尔 · 切片</div>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.03);border-radius:12px;padding:0.8rem 1rem;border-left:3px solid #a78bfa;">
+                            <div style="font-size:0.7rem;color:rgba(255,255,255,0.3);letter-spacing:1px;">形状</div>
+                            <div style="font-size:0.95rem;color:#e8e8e8;">reshape · squeeze · transpose · view</div>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.03);border-radius:12px;padding:0.8rem 1rem;border-left:3px solid #34d399;">
+                            <div style="font-size:0.7rem;color:rgba(255,255,255,0.3);letter-spacing:1px;">拼接</div>
+                            <div style="font-size:0.95rem;color:#e8e8e8;">cat / concat · stack</div>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.03);border-radius:12px;padding:0.8rem 1rem;border-left:3px solid #f472b6;">
+                            <div style="font-size:0.7rem;color:rgba(255,255,255,0.3);letter-spacing:1px;">微分</div>
+                            <div style="font-size:0.95rem;color:#e8e8e8;">requires_grad · backward · detach</div>
+                        </div>
+                    </div>
+                    <div style="margin-top:0.8rem;text-align:center;color:rgba(255,255,255,0.2);font-size:0.8rem;letter-spacing:2px;">
+                        — 感谢观看 —
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /slides-wrapper -->
+
+        <!-- ===== 导航控制 ===== -->
+        <div class="nav-controls" id="navControls">
+            <button class="nav-btn" id="prevBtn" aria-label="上一页">❮</button>
+            <div class="nav-dots" id="dotsContainer"></div>
+            <div class="nav-page">
+                <span class="current" id="currentPage">1</span> / <span id="totalPages">0</span>
+            </div>
+            <button class="nav-btn" id="nextBtn" aria-label="下一页">❯</button>
+        </div>
+
+        <div class="key-hint">←  /  →  键切换</div>
+    </div><!-- /presentation -->
+
+    <!-- 外部 JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>
+
+
